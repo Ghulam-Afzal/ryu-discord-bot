@@ -1,1 +1,10 @@
+# ignore .env files 
 .env
+
+# ignore the __pycache file
+__pycache__/
+
+# ignore files with certain extentions 
+*.db
+*.log
+*.pyc
