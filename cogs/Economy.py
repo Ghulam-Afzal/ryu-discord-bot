@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands 
-import sqlite3
+import aiosqlite
 
 
 class Economy(commands.Cog):
@@ -22,22 +22,21 @@ class Economy(commands.Cog):
             await ctx.send(embed=em)
         else:
             # update the users data in the table, to change the new job
-            db = sqlite3.connect("ryu.db")
-            cursor = db.cursor()
-            cursor.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
-            result = cursor.fetchone()
+            db = await aiosqlite.connect("ryu.db")
+            cursor = await db.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+            result = await cursor.fetchone()
             
             if result is None:
                 sql = ("INSERT INTO economyTable (guild_id, user_id, job, wallet, bank) VALUES(?, ?, ?, ?, ?)")
                 val = (ctx.guild.id, ctx.author.id, job, 0, 0)
-                cursor.execute(sql, val)
+                await db.execute(sql, val)
             else:
                 sql = ("UPDATE economyTable SET job = ? WHERE guild_id = ? AND user_id = ?")
                 val = (job, ctx.guild.id, ctx.author.id)
-                cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
+                await db.execute(sql, val)
+            await db.commit()
+            await cursor.close()
+            await db.close()
 
             em = discord.Embed(title=f"You have chosen to work as a {job}")
             await ctx.send(embed=em)
@@ -52,23 +51,24 @@ class Economy(commands.Cog):
     @commands.cooldown(1, 86400, commands.BucketType.user)
     async def daily(self, ctx):
         em = discord.Embed(title=f"You have claimed your daily of 1000 ")
-        db = sqlite3.connect("ryu.db")
+        db = await aiosqlite.connect("ryu.db")
+
         # update the daily counter by giving the person a 1000
-        cursor = db.cursor()
-        cursor.execute(f"SELECT wallet FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
-        result = cursor.fetchone()
+        cursor = await db.execute(f"SELECT wallet FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+        result = await cursor.fetchone()
+
         if result is None:
             sql = ("INSERT INTO economyTable (guild_id, user_id, job, wallet, bank) VALUES(?, ?, ?, ?, ?)")
             val = (ctx.guild.id, ctx.author.id, "Jobless", 0, 0)
-            cursor.execute(sql, val)
-            cursor.execute("UPDATE economyTable SET wallet = wallet + 1000 WHERE guild_id = ? AND user_id = ?", (ctx.guild.id, ctx.author.id))
+            await db.execute(sql, val)
+            await db.execute("UPDATE economyTable SET wallet = wallet + 1000 WHERE guild_id = ? AND user_id = ?", (ctx.guild.id, ctx.author.id))
         elif result is not None:
             sql = ("UPDATE economyTable SET wallet = wallet + 1000 WHERE guild_id = ? AND user_id = ?")
             val = (ctx.guild.id, ctx.author.id)
-            cursor.execute(sql, val)
-        db.commit()
-        cursor.close()
-        db.close()
+            await db.execute(sql, val)
+        await db.commit()
+        await cursor.close()
+        await db.close()
 
 
         await ctx.channel.send(embed=em)
@@ -78,10 +78,9 @@ class Economy(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 28800, commands.BucketType.user)
     async def work(self, ctx):
-        db = sqlite3.connect("ryu.db")
-        cursor = db.cursor()  
-        cursor.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
-        result = cursor.fetchone()
+        db = await aiosqlite.connect("ryu.db")
+        cursor = await db.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+        result = await cursor.fetchone()
 
         if result is None:
             embed = discord.Embed(titile="You do not have a job selected.")
@@ -91,22 +90,21 @@ class Economy(commands.Cog):
             wage = self.jobs[result[0]] * 8 
             sql = ("UPDATE economyTable SET wallet = wallet + ? WHERE guild_id = ? AND user_id = ?")
             val = (wage, ctx.guild.id, ctx.author.id)
-            cursor.execute(sql, val)
+            await db.execute(sql, val)
             embed = discord.Embed(title=f"you have earned {wage} today.")
             await ctx.send(embed=embed)
-        db.commit()
-        cursor.close()
-        db.close()
+        await db.commit()
+        await cursor.close()
+        await db.close()
         return 
 
     # command to depsoti money from your wallet into you bank account
     @commands.command()
     async def dep(self, ctx, *, amount="test"):
 
-        db = sqlite3.connect("ryu.db")
-        cursor = db.cursor()
-        cursor.execute(f"SELECT wallet FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
-        result = cursor.fetchone()
+        db = await aiosqlite.connect("ryu.db")
+        cursor = await db.execute(f"SELECT wallet FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+        result = await cursor.fetchone()
 
         if result is None:
                 embed =  discord.Embed(title=f"You dont have any money to depsit. Go work.")
@@ -123,12 +121,12 @@ class Economy(commands.Cog):
             else:
                 embed =  discord.Embed(title=f"You have deposited {amt} into your account")
                 val = (amt, ctx.guild.id, ctx.author.id)
-                cursor.execute("UPDATE economyTable SET bank = bank + ? WHERE guild_id = ? AND user_id = ?", val)
-                cursor.execute("UPDATE economyTable SET wallet = wallet - ? WHERE guild_id = ? AND user_id = ?", val)
+                await db.execute("UPDATE economyTable SET bank = bank + ? WHERE guild_id = ? AND user_id = ?", val)
+                await db.execute("UPDATE economyTable SET wallet = wallet - ? WHERE guild_id = ? AND user_id = ?", val)
                 await ctx.send(embed=embed)
-                db.commit()
-                cursor.close()
-                db.close()
+                await db.commit()
+                await cursor.close()
+                await db.close()
                 return 
 
         except ValueError:
@@ -140,10 +138,10 @@ class Economy(commands.Cog):
     @commands.command()
     async def withdraw(self, ctx, *, amount="test"):
 
-        db = sqlite3.connect("ryu.db")
-        cursor = db.cursor()
-        cursor.execute(f"SELECT bank FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
-        result = cursor.fetchone()
+        db = await aiosqlite.connect("ryu.db")
+        
+        cursor = await db.execute(f"SELECT bank FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+        result = await cursor.fetchone()
 
         if result is None:
                 embed =  discord.Embed(title=f"You dont have any money to withdraw.")
@@ -160,12 +158,12 @@ class Economy(commands.Cog):
             else:
                 embed =  discord.Embed(title=f"You have withdrawm {amt} into your account")
                 val = (amt, ctx.guild.id, ctx.author.id)
-                cursor.execute("UPDATE economyTable SET wallet = wallet + ? WHERE guild_id = ? AND user_id = ?", val)
-                cursor.execute("UPDATE economyTable SET bank = bank - ? WHERE guild_id = ? AND user_id = ?", val)
+                await db.execute("UPDATE economyTable SET wallet = wallet + ? WHERE guild_id = ? AND user_id = ?", val)
+                await db.execute("UPDATE economyTable SET bank = bank - ? WHERE guild_id = ? AND user_id = ?", val)
                 await ctx.send(embed=embed)
-                db.commit()
-                cursor.close()
-                db.close()
+                await db.commit()
+                await cursor.close()
+                await db.close()
                 return 
 
         except ValueError:

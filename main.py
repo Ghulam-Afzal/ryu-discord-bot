@@ -1,7 +1,7 @@
 import os
-import sqlite3
 import logging
 import discord 
+import aiosqlite
 from dotenv import load_dotenv
 from discord.ext import commands 
 
@@ -25,9 +25,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def initialize():
     await bot.wait_until_ready()
 
-    db = sqlite3.connect('ryu.db')
-    cursor = db.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS economyTable (guild_id int, user_id int, job text, wallet int, bank int, PRIMARY KEY (guild_id, user_id))")
+    db = await aiosqlite.connect('ryu.db')
+    await db.execute("CREATE TABLE IF NOT EXISTS economyTable (guild_id int, user_id int, job text, wallet int, bank int, PRIMARY KEY (guild_id, user_id))")
 
 
 if __name__ == '__main__':
