@@ -8,18 +8,25 @@ class Economy(commands.Cog):
         self.bot = bot 
         self.jobs = {'peasant': 1, 'yard worker': 5, "farmer": 9, "secretary": 11, "military": 15, "dentist": 25}
 
+
+    @commands.command()
+    async def list_jobs(self, ctx):
+        em = discord.Embed(title=f"The Availble jobs currently are the following: ")
+
+        for job in self.jobs:
+            em.add_field(name=f"{job}", value=f"the income of this job is {self.jobs[job]}", inline=False)
+
+        await ctx.send(embed=em)
+        return 
+
+
     # a make a people be able to perform jobs 
     # command to select a job
     @commands.command()
     async def select_job(self, ctx, *, job=None):
 
         if job is None:
-            em = discord.Embed(title=f"The Availble jobs currently are the following: ")
-
-            for job in self.jobs:
-                em.add_field(name=f"{job}", value=f"the income of this job is {self.jobs[job]}", inline=False)
-
-            await ctx.send(embed=em)
+            await ctx.send("Please specify a job, if you do not know any use list_jobs to see the full list of jobs available.")    
         else:
             # update the users data in the table, to change the new job
             db = await aiosqlite.connect("ryu.db")
