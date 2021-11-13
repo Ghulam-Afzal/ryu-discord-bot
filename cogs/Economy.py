@@ -196,37 +196,27 @@ class Economy(commands.Cog):
 
     @commands.command()
     async def bal(self, ctx, *, user=None):
-        
+        embed  = discord.Embed(title="Your balance is:")
+
         if user is None: 
             val = (ctx.guild.id, ctx.author.id)
             db = await aiosqlite.connect("ryu.db")
             cursor = await db.execute("SELECT wallet, bank FROM economyTable WHERE guild_id = ? AND user_id = ?", val)
             result = await cursor.fetchone()
+            if result is None: 
+                embed.add_field(name="Wallet", value="0", inline=True)
+                embed.add_field(name="Bank", value="0", inline=True)
 
+            else:
+                embed.add_field(name="Wallet", value=result[0], inline=True)
+                embed.add_field(name="Bank", value=result[1], inline=True)
 
-            embed=discord.Embed(title="Your balance is:")
-            embed.add_field(name="Wallet", value=result[0], inline=True)
-            embed.add_field(name="Bank", value=result[1], inline=True)
             await ctx.send(embed=embed)
+            return 
         else: 
             await ctx.send("You can only check your own balance")
 
         return
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            seconds = error.retry_after % (24 * 3600)
-            hour = seconds // 3600
-            seconds %= 3600
-            minutes = seconds // 60
-            seconds %= 60
-            time =  "%d:%02d:%02d" % (hour, minutes, seconds)
-
-            msg = f"You are still on cooldown {time}"
-            await ctx.send(msg)
-
-
 
 
 def setup(bot):
