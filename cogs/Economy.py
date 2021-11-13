@@ -20,6 +20,27 @@ class Economy(commands.Cog):
         return 
 
 
+    @commands.command()
+    async def signup(self, ctx):
+        db = await aiosqlite.connect("ryu.db")
+        cursor = await db.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+        result = await cursor.fetchone()
+            
+        if result is None:
+            sql = ("INSERT INTO economyTable (guild_id, user_id, job, wallet, bank) VALUES(?, ?, ?, ?, ?)")
+            val = (ctx.guild.id, ctx.author.id, "None", 0, 0)
+            await db.execute(sql, val)
+            await ctx.send("Account has been created.")
+        
+        else: 
+            await ctx.send("You already have a account.")
+        
+        await db.commit()
+        await cursor.close()
+        await db.close()
+        return 
+
+
     # a make a people be able to perform jobs 
     # command to select a job
     @commands.command()
@@ -34,19 +55,17 @@ class Economy(commands.Cog):
             result = await cursor.fetchone()
             
             if result is None:
-                sql = ("INSERT INTO economyTable (guild_id, user_id, job, wallet, bank) VALUES(?, ?, ?, ?, ?)")
-                val = (ctx.guild.id, ctx.author.id, job, 0, 0)
-                await db.execute(sql, val)
+                await ctx.send("You do not have a account. Use !signup to make a account.")
             else:
                 sql = ("UPDATE economyTable SET job = ? WHERE guild_id = ? AND user_id = ?")
                 val = (job, ctx.guild.id, ctx.author.id)
                 await db.execute(sql, val)
+                em = discord.Embed(title=f"You have chosen to work as a {job}")
+                await ctx.send(embed=em)
             await db.commit()
             await cursor.close()
             await db.close()
 
-            em = discord.Embed(title=f"You have chosen to work as a {job}")
-            await ctx.send(embed=em)
             return 
 
 
@@ -65,20 +84,17 @@ class Economy(commands.Cog):
         result = await cursor.fetchone()
 
         if result is None:
-            sql = ("INSERT INTO economyTable (guild_id, user_id, job, wallet, bank) VALUES(?, ?, ?, ?, ?)")
-            val = (ctx.guild.id, ctx.author.id, "Jobless", 0, 0)
-            await db.execute(sql, val)
-            await db.execute("UPDATE economyTable SET wallet = wallet + 1000 WHERE guild_id = ? AND user_id = ?", (ctx.guild.id, ctx.author.id))
+            await ctx.send("You do not have a account. Use !signup to make a account. Now you wait a day before you can claim.")
         elif result is not None:
             sql = ("UPDATE economyTable SET wallet = wallet + 1000 WHERE guild_id = ? AND user_id = ?")
             val = (ctx.guild.id, ctx.author.id)
             await db.execute(sql, val)
+            await ctx.channel.send(embed=em)
         await db.commit()
         await cursor.close()
         await db.close()
 
 
-        await ctx.channel.send(embed=em)
         return 
 
 
