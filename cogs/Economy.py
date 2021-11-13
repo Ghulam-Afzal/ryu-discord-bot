@@ -171,6 +171,24 @@ class Economy(commands.Cog):
             await ctx.send(embed=embed)
             return 
 
+    @commands.command()
+    async def bal(self, ctx, *, user=None):
+        
+        if user is None: 
+            val = (ctx.guild.id, ctx.author.id)
+            db = await aiosqlite.connect("ryu.db")
+            cursor = await db.execute("SELECT wallet, bank FROM economyTable WHERE guild_id = ? AND user_id = ?", val)
+            result = await cursor.fetchone()
+
+
+            embed=discord.Embed(title="Your balance is:")
+            embed.add_field(name="Wallet", value=result[0], inline=True)
+            embed.add_field(name="Bank", value=result[1], inline=True)
+            await ctx.send(embed=embed)
+        else: 
+            await ctx.send("You can only check your own balance")
+
+        return
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
