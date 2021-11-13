@@ -6,7 +6,7 @@ import aiosqlite
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot 
-        self.jobs = {'peasant': 1, 'yard worker': 5, "farmer": 9, "secretary": 11, "military": 15, "dentist": 25}
+        self.jobs = {'peasant': [1, 0], 'yard worker': [5, 3000], "farmer": [9, 6000], "secretary": [11, 9000], "military": [15, 12000], "dentist": [25, 15000]}
 
 
     @commands.command()
@@ -14,7 +14,7 @@ class Economy(commands.Cog):
         em = discord.Embed(title=f"The Availble jobs currently are the following: ")
 
         for job in self.jobs:
-            em.add_field(name=f"{job}", value=f"the income of this job is {self.jobs[job]}", inline=False)
+            em.add_field(name=f"{job}", value=f"the income of this job is {self.jobs[job][0]} and it costs {self.jobs[job][1]}", inline=False)
 
         await ctx.send(embed=em)
         return 
@@ -110,7 +110,7 @@ class Economy(commands.Cog):
             await ctx.send(embed=embed)
 
         else:
-            wage = self.jobs[result[0]] * 8 
+            wage = self.jobs[result[0]][0] * 8 
             sql = ("UPDATE economyTable SET wallet = wallet + ? WHERE guild_id = ? AND user_id = ?")
             val = (wage, ctx.guild.id, ctx.author.id)
             await db.execute(sql, val)
