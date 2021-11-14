@@ -6,15 +6,15 @@ from discord.ext import commands
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot 
-        self.jobs = {'peasant': [1, 0], 'yard worker': [5, 3000], "farmer": [9, 6000], "secretary": [11, 9000], "military": [15, 12000], "dentist": [25, 15000]}
+        self.jobs = {'peasant': [1, 0], 'yard worker': [5, 10], "farmer": [9, 20], "secretary": [11, 30], "military": [15, 40], "dentist": [25, 50]}
 
 
     @commands.command()
     async def list_jobs(self, ctx):
-        em = discord.Embed(title=f"The Availble jobs currently are the following: ")
+        em = discord.Embed(title=f"The Available jobs currently are the following: ")
 
         for job in self.jobs:
-            em.add_field(name=f"{job}", value=f"the income of this job is {self.jobs[job][0]} and it costs {self.jobs[job][1]}", inline=False)
+            em.add_field(name=f"{job}", value=f"the income of this job is {self.jobs[job][0]} and it requires level: {self.jobs[job][1]}", inline=False)
 
         await ctx.send(embed=em)
         return 
@@ -22,7 +22,7 @@ class Economy(commands.Cog):
 
     @commands.command()
     async def signup(self, ctx):
-        # db = await aiosqlite.connect("ryu.db")
+        
         cursor = await self.bot.db.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
         result = await cursor.fetchone()
             
@@ -51,15 +51,21 @@ class Economy(commands.Cog):
             # update the users data in the table, to change the new job
             cursor = await self.bot.db.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
             result = await cursor.fetchone()
-            
+            lvl_cursor = await self.bot.db.execute(f"SELECT lvl FROM levelData WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
+            lvl_result = await lvl_cursor.fetchone()
+
             if result is None:
                 await ctx.send("You do not have a account. Use !signup to make a account.")
+
             else:
-                sql = ("UPDATE economyTable SET job = ? WHERE guild_id = ? AND user_id = ?")
-                val = (job, ctx.guild.id, ctx.author.id)
-                await self.bot.db.execute(sql, val)
-                em = discord.Embed(title=f"You have chosen to work as a {job}")
-                await ctx.send(embed=em)
+                if lvl_result[0] >= self.jobs[job][1]:
+                    sql = ("UPDATE economyTable SET job = ? WHERE guild_id = ? AND user_id = ?")
+                    val = (job, ctx.guild.id, ctx.author.id)
+                    await self.bot.db.execute(sql, val)
+                    em = discord.Embed(title=f"You have chosen to work as a {job}")
+                    await ctx.send(embed=em)
+                else:
+                    await ctx.send("Youre level is not high for this job.")
                 
             await self.bot.db.commit()
             await cursor.close()
