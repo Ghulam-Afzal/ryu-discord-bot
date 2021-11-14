@@ -2,6 +2,7 @@ import os
 import logging
 import discord 
 import aiosqlite
+import asyncio
 from dotenv import load_dotenv
 from discord.ext import commands 
 
@@ -25,10 +26,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def initialize():
     await bot.wait_until_ready()
 
-    db = await aiosqlite.connect('ryu.db')
-    await db.execute("CREATE TABLE IF NOT EXISTS economyTable (guild_id int, user_id int, job text, wallet int, bank int, PRIMARY KEY (guild_id, user_id))")
-    # await db.execute("CREATE TABLE IF NOT EXISTS levelData (guild_id int, user_id int, lvl int, exp int, msg_count int, PRIMARY KEY (guild_id, user_id))")
-    await db.close()
+    bot.db = await aiosqlite.connect('ryu.db')
+    await bot.db.execute("CREATE TABLE IF NOT EXISTS economyTable (guild_id int, user_id int, job text, wallet int, bank int, PRIMARY KEY (guild_id, user_id))")
+    await bot.db.execute("CREATE TABLE IF NOT EXISTS levelData (guild_id int, user_id int, lvl int, exp int, msg_count int, PRIMARY KEY (guild_id, user_id))")
 
 
 if __name__ == '__main__':
@@ -43,3 +43,4 @@ if __name__ == '__main__':
 
 bot.loop.create_task(initialize())
 bot.run(TOKEN)
+asyncio.run(bot.db.close())
