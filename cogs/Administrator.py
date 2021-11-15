@@ -54,6 +54,62 @@ class Administrator(commands.Cog):
                     await ctx.send(f'Unbanned {user.mention}')                    
                     return 
 
+    @commands.command(name='kick', help='Kicks a member.')
+    @commands.has_permissions(kick_members=True)
+    async def kick_member(self, ctx, member: discord.Member = None, *, reason="No reason given"):
+        try:
+            if member == ctx.message.author:
+                await ctx.send('Can not kick yourself.')
+                return
+            if member is None:
+                await ctx.send('A member must be specified.')
+                return
+            else:
+                message = f'You have been kicked form {ctx.guild.name} for {reason}'
+                em = discord.Embed(title=f"Kicked {member}!",
+                                description=f"Reason: {reason} By: {ctx.author.mention}")
+                await member.send(message)
+                await ctx.channel.send(embed=em)
+                await member.kick(reason=reason)
+        except:
+            await ctx.send(f'Error in kicking {member} from the server.')
+
+
+    @commands.command(aliases=['crch', 'create-channel', 'create-ch'],
+             help='Allows you to create text channels\n takes channel name as the input.')
+    @commands.has_permissions(administrator=True)
+    async def create_text_channel(self, ctx, channel_name):
+        # get the existing channels
+        existing_channel = discord.utils.get(ctx.guild.channels, name=channel_name)
+        # check if the name of the channel is passed as a arg
+        if channel_name is None:
+            await ctx.send('A channel name is required.')
+        # if the channel does not exist already then create one
+        if not existing_channel:
+            await ctx.send(f'New channel created named:  {channel_name}')
+            await ctx.guild.create_text_channel(channel_name)
+        # if it already exists tell the member that it does
+        else:
+            await ctx.send(f'{channel_name} already exits.')
+
+
+    @commands.command(aliases=['dlch', 'delete-channel', 'delete-ch'],
+                help='Allows you to delete text channels\n takes channel name as the input.')
+    @commands.has_permissions(administrator=True)
+    async def delete_channel(self, ctx, channel_name):
+        # check is the channel that is entered exists
+        existing_channel = discord.utils.get(ctx.guild.channels, name=channel_name)
+        if channel_name is None:
+            await ctx.send('A channel name is required.')
+        # if it exists delete it
+        if existing_channel is not None:
+            await existing_channel.delete()
+            await ctx.send(f'{channel_name} was deleted.')
+        # if it does not exist inform the user
+        else:
+            await ctx.send(f'{channel_name} could not be found.')
+
+
     @commands.command() 
     @commands.has_permissions(administrator=True)
     async def setlvl(self, ctx, member: discord.Member = None, *,  level=None):
