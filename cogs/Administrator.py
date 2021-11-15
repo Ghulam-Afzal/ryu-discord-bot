@@ -1,5 +1,7 @@
 import discord 
 from discord.ext import commands 
+from discord.ext.commands.errors import MemberNotFound
+import asyncio 
 
 
 class Administrator(commands.Cog):
@@ -9,6 +11,7 @@ class Administrator(commands.Cog):
 
     # bans a user 
     @commands.command()
+    @commands.has_permissions(administrator=True)
     async def ban(self, ctx, member:discord.Member = None, reason = "None Given."):
         try:
             if member == ctx.message.author:
@@ -28,6 +31,7 @@ class Administrator(commands.Cog):
 
     # unbans a user 
     @commands.command()
+    @commands.has_permissions(administrator=True)
     async def unban(self, ctx, *, member):
         try:
             x = int(member)
@@ -50,7 +54,43 @@ class Administrator(commands.Cog):
                     await ctx.send(f'Unbanned {user.mention}')                    
                     return 
 
-    
+    @commands.command() 
+    @commands.has_permissions(administrator=True)
+    async def setlvl(self, ctx, member: discord.Member = None, *,  level=None):
+
+        # if the lvl was not specified then ask for it to be specified 
+        if level is None:
+            return await ctx.send('There was no reset level specified.')
+        
+        # if the level parameter is not a number then ask for it to be entered as a number 
+        try: 
+            check_if_level_is_int = int(level)
+            
+            # if member was specified, then continue with the command 
+            if member is not None: 
+                try: 
+                    await ctx.send(f'Are you sure you want the level for {member.mention} to be set to {level}. Response must be yes/no.')
+                    response = await self.bot.wait_for('message', timeout=60.0)
+                
+                    # if the response is a yes then reset the level of the user
+                    if response.content.lower() == 'yes': 
+                        await self.bot.db.execute('UPDATE levelData SET lvl = ? WHERE guild_id = ? AND user_id = ?', (level, ctx.guild.id, member.id))
+                        await self.bot.db.execute('UPDATE levelData SET exp = ? WHERE guild_id = ? AND user_id = ?', (0, ctx.guild.id, member.id))
+                        await ctx.send(f'The level for {member} has been set to {level}')
+
+                    # else cancel the command 
+                    else: 
+                        return await ctx.send('Command was canceled.')
+
+                except asyncio.TimeoutError: 
+                    return await ctx.send('Command timed out.')
+        
+        
+        except ValueError: 
+            return await ctx.send('Level must be a number')
+        
+        except MemberNotFound: 
+            return await ctx.send('Membe was not found')
 
 def setup(bot):
     bot.add_cog(Administrator(bot))
