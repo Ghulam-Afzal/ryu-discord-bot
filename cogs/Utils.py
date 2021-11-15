@@ -19,6 +19,15 @@ class Utils(commands.Cog):
             msg = f"You are still on cooldown {time}"
             await ctx.send(msg)
 
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send('User can not be found.')
+
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.send("You dont have all the permissions.")
+        
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send('The command that was entered was not found.')
+
 
 def setup(bot):
     bot.add_cog(Utils(bot))
