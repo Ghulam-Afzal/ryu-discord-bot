@@ -74,7 +74,7 @@ class Level(commands.Cog):
             await self.bot.db.commit()
 
 
-    @commands.command()
+    @commands.command(name='lvl', help='Displays a users level.')
     async def level(self, ctx, member: discord.Member = None): 
         if member is None: 
             member = ctx.author

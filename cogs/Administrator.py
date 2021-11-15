@@ -10,7 +10,7 @@ class Administrator(commands.Cog):
         self.bot = bot
 
     # bans a user 
-    @commands.command()
+    @commands.command(name='ban', help='Bans a member.')
     @commands.has_permissions(administrator=True)
     async def ban(self, ctx, member:discord.Member = None, reason = "None Given."):
         try:
@@ -30,7 +30,7 @@ class Administrator(commands.Cog):
             await ctx.send(f'Error in banning {member} from the server.')
 
     # unbans a user 
-    @commands.command()
+    @commands.command(name='unban', help='Unbans a member.')
     @commands.has_permissions(administrator=True)
     async def unban(self, ctx, *, member):
         try:
@@ -110,7 +110,7 @@ class Administrator(commands.Cog):
             await ctx.send(f'{channel_name} could not be found.')
 
 
-    @commands.command() 
+    @commands.command(name='setlvl', help='Sets a users level.') 
     @commands.has_permissions(administrator=True)
     async def setlvl(self, ctx, member: discord.Member = None, *,  level=None):
 

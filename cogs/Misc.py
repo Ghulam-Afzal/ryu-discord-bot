@@ -18,7 +18,7 @@ class Misc(commands.Cog):
 
         
 
-    @commands.command()
+    @commands.command(aliases=['av', 'avatar', 'AV', 'Av', 'AVATAR'], help='Shows your avatar.')
     async def show_avatar(self, ctx, *, member: discord.Member = None):
     # if there was no user specified then return the avatar of the message author
         if member is None:

@@ -9,7 +9,7 @@ class Economy(commands.Cog):
         self.jobs = {'peasant': [1, 0], 'yard worker': [5, 10], "farmer": [9, 20], "secretary": [11, 30], "military": [15, 40], "dentist": [25, 50]}
 
 
-    @commands.command()
+    @commands.command(name='ljobs', help='List Jobs.')
     async def list_jobs(self, ctx):
         em = discord.Embed(title=f"The Available jobs currently are the following: ")
 
@@ -20,7 +20,7 @@ class Economy(commands.Cog):
         return 
 
 
-    @commands.command()
+    @commands.command(name='signup', help='Create a bank account.')
     async def signup(self, ctx):
         
         cursor = await self.bot.db.execute(f"SELECT job FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
@@ -42,7 +42,7 @@ class Economy(commands.Cog):
 
     # a make a people be able to perform jobs 
     # command to select a job
-    @commands.command()
+    @commands.command(name='sjob', help='Choose a job.')
     async def select_job(self, ctx, *, job=None):
 
         if job is None:
@@ -77,7 +77,7 @@ class Economy(commands.Cog):
 
 
     # allow the user to get a daily
-    @commands.command()
+    @commands.command(name='daily', help='Get your daily allowance.')
     @commands.cooldown(1, 86400, commands.BucketType.user)
     async def daily(self, ctx):
         em = discord.Embed(title=f"You have claimed your daily of 1000 ")
@@ -102,7 +102,7 @@ class Economy(commands.Cog):
         return 
 
 
-    @commands.command()
+    @commands.command(name='work', help=' Work.')
     @commands.cooldown(1, 28800, commands.BucketType.user)
     async def work(self, ctx):
         
@@ -124,8 +124,8 @@ class Economy(commands.Cog):
         await cursor.close()
         return 
 
-    # command to depsoti money from your wallet into you bank account
-    @commands.command()
+    # command to deposit money from your wallet into you bank account
+    @commands.command(name='dep', help='Deposit money to your bank.')
     async def dep(self, ctx, *, amount="test"):
 
         cursor = await self.bot.db.execute(f"SELECT wallet FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
@@ -160,7 +160,7 @@ class Economy(commands.Cog):
             return 
 
     # command to with draw money from your bank into your wallet for use
-    @commands.command()
+    @commands.command(name='with', help='Withdraw money from your bank.')
     async def withdraw(self, ctx, *, amount="test"):
         
         cursor = await self.bot.db.execute(f"SELECT bank FROM economyTable WHERE guild_id = {ctx.guild.id} AND user_id = {ctx.author.id}")
@@ -194,7 +194,7 @@ class Economy(commands.Cog):
             await ctx.send(embed=embed)
             return 
 
-    @commands.command()
+    @commands.command(name='bal', help='Display you balance.')
     async def bal(self, ctx, *, user=None):
         embed  = discord.Embed(title="Your balance is:")
 
