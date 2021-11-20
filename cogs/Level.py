@@ -22,29 +22,16 @@ class Level(commands.Cog):
                 exp_given = random.randint(15, 25)
                 await self.bot.db.execute('''
                 UPDATE levelData 
-                SET exp = exp + ? 
+                SET exp = exp + ?,  msg_count = msg_count + 1
                 WHERE guild_id = ? AND user_id = ?
                 ''', (exp_given, message.guild.id, message.author.id))
 
-                await self.bot.db.execute('''
-                UPDATE levelData 
-                SET msg_count = msg_count + 1 
-                WHERE guild_id = ? AND user_id = ?
-                ''', (message.guild.id, message.author.id))
-
                 cur = await self.bot.db.execute('''
-                SELECT exp FROM levelData
-                WHERE guild_id = ? AND user_id = ?
-                ''', (message.guild.id, message.author.id))
-
-                curr_lvl = await self.bot.db.execute('''
-                SELECT lvl FROM levelData 
+                SELECT exp, lvl FROM levelData
                 WHERE guild_id = ? AND user_id = ?
                 ''', (message.guild.id, message.author.id))
                 data = await cur.fetchone() 
-                exp = data[0]
-                temp = await curr_lvl.fetchone()
-                lvl = temp[0]
+                exp, lvl = data[0], data[1]
                 print(lvl)
 
                 # calc exp required for next level and then update the level in db
@@ -55,22 +42,11 @@ class Level(commands.Cog):
                     # increment the level for the user 
                     await self.bot.db.execute('''
                     UPDATE levelData 
-                    SET lvl = lvl + 1 
+                    SET lvl = lvl + 1, exp = 0
                     WHERE guild_id = ? AND user_id = ?
                     ''', (message.guild.id, message.author.id))
-
-                    # reset the exp 
-                    await self.bot.db.execute('''
-                    UPDATE levelData
-                    SET exp = 0
-                    WHERE guild_id = ? AND user_id = ?
-                    ''', (message.guild.id, message.author.id))
-
-                    new_level = lvl + 1
-
-
-                    # alert user of level up 
-                    await message.channel.send(f'{message.author.mention} Congrats!! You are now level **{new_level}!!!**')
+                    
+                    await message.channel.send(f'{message.author.mention} Congrats!! You are now level **{lvl + 1}!!!**')
             await self.bot.db.commit()
 
 
@@ -79,14 +55,13 @@ class Level(commands.Cog):
         if member is None: 
             member = ctx.author
 
-        # FETCH DATA FROM DB
-        async with self.bot.db.execute('SELECT exp, lvl, msg_count  FROM levelData WHERE guild_id = ? AND user_id = ?', (ctx.guild.id, member.id)) as cursor: 
-            data = await cursor.fetchone()
-            curr_exp = data[0] 
-            lvl = data[1] 
-            msg_count = data[2]
+        # fetch user data from the db
+        cursor = await self.bot.db.execute('SELECT exp, lvl, msg_count  FROM levelData WHERE guild_id = ? AND user_id = ?', (ctx.guild.id, member.id))
+        data = await cursor.fetchone()
+        curr_exp, lvl, msg_count = data[0], data[1], data[2]
         
         exp_to_next_level = int((.04 * (lvl ** 3) + .8 * (lvl ** 2) + 2 * lvl) + 100) 
+
         # embed that shows information about the level stats of the requwsted user 
         embed = discord.Embed(title='Level Stats', description=f'Level stats for the server {ctx.guild.name}', color=member.color)
         embed.set_author(name=f'{ctx.author.name}#{ctx.author.discriminator}', icon_url=member.avatar_url)
