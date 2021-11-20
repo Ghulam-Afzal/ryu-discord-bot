@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 
-class MemberTest(commands.Cog):
+class Member(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -26,4 +26,4 @@ class MemberTest(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(MemberTest(bot))
+    bot.add_cog(Member(bot))
