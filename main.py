@@ -29,6 +29,7 @@ async def initialize():
     bot.db = await aiosqlite.connect('ryu.db')
     await bot.db.execute("CREATE TABLE IF NOT EXISTS economyTable (guild_id int, user_id int, job text, wallet int, bank int, PRIMARY KEY (guild_id, user_id))")
     await bot.db.execute("CREATE TABLE IF NOT EXISTS levelData (guild_id int, user_id int, lvl int, exp int, msg_count int, PRIMARY KEY (guild_id, user_id))")
+    await bot.db.execute("CREATE TABLE IF NOT EXIsTS shopData (guild_id int, user_id int, items longtext, PRIMARY KEY (guild_id, user_id))")
 
 
 if __name__ == '__main__':
