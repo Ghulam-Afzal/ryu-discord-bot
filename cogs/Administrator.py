@@ -13,13 +13,16 @@ class Administrator(commands.Cog):
     @commands.command(name='ban', help='Bans a member.')
     @commands.has_permissions(administrator=True)
     async def ban(self, ctx, member:discord.Member = None, reason = "None Given."):
+        
         try:
             if member == ctx.message.author:
                 await ctx("Can not ban yourself.")
                 return 
+            
             if member is None:
                 await ctx.send("Member must be specified.")
                 return
+            
             else:
                 em = discord.Embed(title=f"Banned {member}!", description=f"Reason: {reason} By: {ctx.author.mention}")
                 await member.send(f'You have been banned form {ctx.guild.name} for {reason}')
@@ -39,6 +42,7 @@ class Administrator(commands.Cog):
 
             for ban_entry in banned_users:
                 user = banned_users.user
+                
                 if user.id == x:
                     await ctx.guild.unban(user)
                     await ctx.send(f'Unbanned {user.mention}')
@@ -47,8 +51,10 @@ class Administrator(commands.Cog):
         except ValueError:
             banned_users = await ctx.guild.bans()
             member_name, member_discriminator = member.split("#")
+            
             for ban_entry in banned_users:
                 user = ban_entry.user
+                
                 if((user.name, user.discriminator) == (member_name, member_discriminator)):
                     await ctx.guild.unban(user)
                     await ctx.send(f'Unbanned {user.mention}')                    
@@ -61,9 +67,11 @@ class Administrator(commands.Cog):
             if member == ctx.message.author:
                 await ctx.send('Can not kick yourself.')
                 return
+            
             if member is None:
                 await ctx.send('A member must be specified.')
                 return
+            
             else:
                 message = f'You have been kicked form {ctx.guild.name} for {reason}'
                 em = discord.Embed(title=f"Kicked {member}!",
@@ -71,6 +79,7 @@ class Administrator(commands.Cog):
                 await member.send(message)
                 await ctx.channel.send(embed=em)
                 await member.kick(reason=reason)
+                
         except:
             await ctx.send(f'Error in kicking {member} from the server.')
 
@@ -79,15 +88,19 @@ class Administrator(commands.Cog):
              help='Allows you to create text channels\n takes channel name as the input.')
     @commands.has_permissions(administrator=True)
     async def create_text_channel(self, ctx, channel_name):
+        
         # get the existing channels
         existing_channel = discord.utils.get(ctx.guild.channels, name=channel_name)
+        
         # check if the name of the channel is passed as a arg
         if channel_name is None:
             await ctx.send('A channel name is required.')
+            
         # if the channel does not exist already then create one
         if not existing_channel:
             await ctx.send(f'New channel created named:  {channel_name}')
             await ctx.guild.create_text_channel(channel_name)
+            
         # if it already exists tell the member that it does
         else:
             await ctx.send(f'{channel_name} already exits.')
@@ -97,14 +110,17 @@ class Administrator(commands.Cog):
                 help='Allows you to delete text channels\n takes channel name as the input.')
     @commands.has_permissions(administrator=True)
     async def delete_channel(self, ctx, channel_name):
+        
         # check is the channel that is entered exists
         existing_channel = discord.utils.get(ctx.guild.channels, name=channel_name)
         if channel_name is None:
             await ctx.send('A channel name is required.')
+            
         # if it exists delete it
         if existing_channel is not None:
             await existing_channel.delete()
             await ctx.send(f'{channel_name} was deleted.')
+            
         # if it does not exist inform the user
         else:
             await ctx.send(f'{channel_name} could not be found.')
@@ -132,7 +148,7 @@ class Administrator(commands.Cog):
                     if response.content.lower() == 'yes': 
                         await self.bot.db.execute('UPDATE levelData SET lvl = ? WHERE guild_id = ? AND user_id = ?', (level, ctx.guild.id, member.id))
                         await self.bot.db.execute('UPDATE levelData SET exp = ? WHERE guild_id = ? AND user_id = ?', (0, ctx.guild.id, member.id))
-                        await ctx.send(f'The level for {member} has been set to {level}')
+                        await ctx.send(f'The level for {member.mention} has been set to {level}')
 
                     # else cancel the command 
                     else: 
@@ -146,7 +162,7 @@ class Administrator(commands.Cog):
             return await ctx.send('Level must be a number')
         
         except MemberNotFound: 
-            return await ctx.send('Membe was not found')
+            return await ctx.send('Member was not found')
 
 def setup(bot):
     bot.add_cog(Administrator(bot))
