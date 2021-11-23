@@ -55,7 +55,7 @@ class Administrator(commands.Cog):
             for ban_entry in banned_users:
                 user = ban_entry.user
                 
-                if((user.name, user.discriminator) == (member_name, member_discriminator)):
+                if (user.name, user.discriminator) == (member_name, member_discriminator):
                     await ctx.guild.unban(user)
                     await ctx.send(f'Unbanned {user.mention}')                    
                     return 
@@ -126,7 +126,7 @@ class Administrator(commands.Cog):
             await ctx.send(f'{channel_name} could not be found.')
 
 
-    @commands.command(name='setlvl', help='Sets a users level.') 
+    @commands.command(name='slvl', help='Sets a users level.')
     @commands.has_permissions(administrator=True)
     async def setlvl(self, ctx, member: discord.Member = None, *,  level=None):
 
